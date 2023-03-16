@@ -69,12 +69,12 @@ app.get('/check-auth', async(req, res) => {
   if(req.session.user) {
     res.send({
       isLoggedIn: !(req.session.user == null),
-      username: req.session.user,
+      email: req.session.user,
       });
   } else {
     res.send({
       isLoggedIn: !(req.session.user == null),
-      username: 'unassigned',
+      email: 'unassigned',
       });
   }
 });
@@ -82,20 +82,20 @@ app.get('/check-auth', async(req, res) => {
 app.post('/login', async(req, res) => {
   const user = await User.findAll({
     where: {
-      username: {
-        [Op.eq]: req.body.username
+      email: {
+        [Op.eq]: req.body.email
       }
     }
   });
   if(user[0] == null) {
-    res.json({success: false, message: 'Username or password invalid'});
+    res.json({success: false, message: 'Email or password invalid'});
   } else {
-    bcrypt.compare(req.body.passphrase, user[0].password, function(err, result) {
-      if ((result) && (req.body.username === user[0].username)) {
-        req.session.user = req.body.username;
+    bcrypt.compare(req.body.password, user[0].password, function(err, result) {
+      if ((result) && (req.body.email === user[0].email)) {
+        req.session.user = req.body.email;
         res.json({success: true, message: 'Login success'});
       } else {
-        res.json({success: false, message: 'Username or password invalid'});
+        res.json({success: false, message: 'Email or password invalid'});
       }
     });
   }
@@ -110,7 +110,7 @@ app.post('/create_account', async(req, res) => {
     }
   });
   if(user[0] == null) {
-    bcrypt.hash(req.body.passphrase, 10, function(err, hash) {
+    bcrypt.hash(req.body.password, 10, function(err, hash) {
         User.create({email: req.body.email, password: hash});
     });
     res.json({success: true, message: 'Create success'});
@@ -132,6 +132,6 @@ app.get('/logout', async(req, res) => {
 /* Main app routes */
 
 
-const server = app.listen(3000, function() {
+const server = app.listen(3001, function() {
     console.log('listening on port 3001');
 });
