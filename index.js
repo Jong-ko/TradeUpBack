@@ -128,20 +128,46 @@ app.get("/logout", async (req, res) => {
 });
 
 //routes for Item Browsing
+//All Item Fetch
 app.get("/fetchAllItems", async (req, res) => {
   const items = await Item.findAll();
   res.json(items);
 });
 
+//Catagory Fetch used in ItemBrowsePage.js component
 app.get("/fetchCatagory/:catagory", async (req, res) => {
   const { catagory } = req.params;
   const items = await Item.findAll({
     where: {
-      category: catagory
+      category: catagory,
     },
   });
   res.json(items);
 });
+
+//Route for My Item
+app.get("/myItem/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const myItem = await Item.findAll({
+    where: {
+      userID: userId,
+    },
+  });
+  res.json(myItem)
+});
+
+//Route to Trade Item used in TradeButton.js component
+app.post("/Trade", async(req,res) => {
+  const { offerorID, offereeID, itemID} =req.body;
+  const NewTrade = await Trade.create({
+    offerorID,
+    offereeID,
+    itemID
+  })
+  res.json({
+    id:NewTrade.ID,
+  })
+})
 
 /* Main app routes */
 
