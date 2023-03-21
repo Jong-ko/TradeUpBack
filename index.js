@@ -143,6 +143,18 @@ app.get("/fetchCatagory/:catagory", async (req, res) => {
   res.json(items);
 });
 
+//routes for fetching offers
+app.get("/fetchoffers/:id" , async (req, res) => {
+  const { id } =req.params;
+  const offers = await Trade.findAll({
+    where: {
+      offereeID: id
+    }
+  })
+  res.json(offers) 
+})
+
+
 /* Main app routes */
 
 const server = app.listen(3001, function () {
