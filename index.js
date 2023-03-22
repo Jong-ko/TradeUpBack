@@ -218,6 +218,24 @@ app.get("/fetchoffers/:id" , async (req, res) => {
   res.json(offers) 
 })
 
+app.get("/offerinfo/:offerorID/:itemID", async (req, res) => {
+  const  { offerorID, itemID} = req.params;
+
+ const itemInfo = await Item.findAll({
+   where: {
+     id: itemID
+   }
+ })
+ const offerorInfo = await User.findAll({
+   where: { 
+     id: offerorID
+   },
+   attributes:['id', 'firstName']
+ })
+ const offerInfo = [itemInfo[0], offerorInfo[0]]
+ res.json(offerInfo)
+})
+
 /* Main app routes */
 
 const server = app.listen(3001, function () {
