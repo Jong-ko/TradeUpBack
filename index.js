@@ -58,11 +58,12 @@ app.post('/new-item', upload.single('image'), async (req, res) => {
  });
  
  // Send back the new user's ID in the response:
- res.send([{
-  "description": description,
-  "image": image,
-  "category": category
-}])
+ const items = await Item.findAll({
+  where: {
+    userAccount: req.session.user
+  }
+  });
+  res.json(items);
 })
 
 app.post('/update-item', upload.single('image'), async (req, res) => {
@@ -81,11 +82,12 @@ app.post('/update-item', upload.single('image'), async (req, res) => {
  });
  
  // Send back the new user's ID in the response:
- res.send([{
-     "description": description,
-     "image": image,
-     "category": category
-}])
+ const items = await Item.findAll({
+  where: {
+    userAccount: req.session.user
+  }
+  });
+  res.json(items);
 })
 
 app.get('/images/:imageName', (req, res) => {
@@ -96,6 +98,15 @@ app.get('/images/:imageName', (req, res) => {
 
 app.delete("/delete-item/:id", async (req, res) => {
   const { id } = req.params;
+
+  fs.rm('public/images/'+req.body.image, { force:true }, (err) => {
+    if(err){
+        // File deletion failed
+        console.error(err.message);
+        return;
+    }
+    console.log("File deleted successfully");
+  })
   const removeItem = await Item.destroy({
     where: {
       id,
