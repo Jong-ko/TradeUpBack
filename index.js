@@ -202,6 +202,13 @@ app.get('/fetchCatagory/:catagory', async (req, res) => {
   const items = await Item.findAll({
     where: {
       category: catagory,
+	  userAccount: {
+		[Op.and]:{
+			[Op.notIn]: Sequelize.literal(
+			`(select "offereeID" from "Trades" where "offerorID" = '${req.session.user}')`),
+			[Op.ne]: req.session.user
+		}
+	  }
     },
   });
   res.json(items);

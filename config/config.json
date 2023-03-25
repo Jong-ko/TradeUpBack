@@ -1,7 +1,7 @@
 {
   "development": {
     "username": "postgres",
-    "password": "Arako200",
+    "password": "postgres",
     "database": "TradeUpDB",
     "host": "database-1.csktzom6uj0m.us-east-2.rds.amazonaws.com",
     "dialect": "postgres"
