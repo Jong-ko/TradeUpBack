@@ -69,7 +69,7 @@ app.post('/new-item', upload.single('image'), async (req, res) => {
 
 app.post('/update-item', upload.single('image'), async (req, res) => {
   // req.body contains an Object with firstName, lastName, email
-  const { description, category, userAccount } = req.body;
+  const { description, category, userAccount, name } = req.body;
   const image = req.file.filename;
 
   const newPost = await Item.update(
@@ -77,6 +77,7 @@ app.post('/update-item', upload.single('image'), async (req, res) => {
       description,
       image,
       category,
+      name,
     },
     {
       where: {
