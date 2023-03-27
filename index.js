@@ -385,11 +385,6 @@ app.post('/offeree-approve', async (req, res) => {
   
 });
 
-//Route to finalize pending trade by offeree
-app.post('/offeree-approve', async (req, res) => {
-  
-});
-
 //routes for fetching offers
 app.get('/fetchoffers/:id', async (req, res) => {
   const { id } = req.params;
