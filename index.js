@@ -203,13 +203,15 @@ app.get('/fetchCatagory/:catagory', async (req, res) => {
   const items = await Item.findAll({
     where: {
       category: catagory,
-	  userAccount: {
-		[Op.and]:{
-			[Op.notIn]: Sequelize.literal(
-			`(select "offereeID" from "Trades" where "offerorID" = '${req.session.user}')`),
-			[Op.ne]: req.session.user
-		}
-	  }
+      userAccount: {
+      [Op.and]:[
+        {[Op.notIn]: Sequelize.literal(
+        `(select "offerorID" from "Trades" where "offereeID" = '${req.session.user}')`)},
+        {[Op.notIn]: Sequelize.literal(
+        `(select "offereeID" from "Trades" where "offerorID" = '${req.session.user}')`)},
+        {[Op.ne]: req.session.user}
+        ]
+      }
     },
   });
   res.json(items);
@@ -226,17 +228,166 @@ app.get('/myItem/:userId', async (req, res) => {
   res.json(myItem);
 });
 
+//Route to get pending trades by offeror
+app.post('/pending-offeror', async (req, res) => {
+  const { offerorID } = req.body;
+  const myTrade = await Trade.findAll({
+    where: {
+      offerorID: offerorID,
+      status: "pending",
+    },
+  });
+  res.json(myTrade);
+});
+
+//Route to get pending trades by offeree
+app.post('/pending-offeree', async (req, res) => {
+  const { offereeID } = req.body
+  const myTrade = await Trade.findAll({
+    where: {
+      offereeID: offereeID,
+      status: "pending",
+    },
+  });
+  res.json(myTrade);
+});
+
 //Route to Trade Item used in TradeButton.js component
 app.post('/Trade', async (req, res) => {
-  const { offerorID, offereeID, itemID } = req.body;
-  const NewTrade = await Trade.create({
+  const { offerorID, offereeID, itemID, offerorItemID } = req.body;
+  const NewTrade = await Trade.upsert({
     offerorID,
     offereeID,
     itemID,
+    offerorItemID,
+  },
+  {
+    conflictFields: ['offerorID'],
   });
   res.json({
     id: NewTrade.ID,
   });
+});
+
+//Route to accept trade offer
+app.post('/accept-trade', async (req, res) => {
+  const { offerorID, offereeID } = req.body;
+  
+  await Trade.update({ status: "pending" }, {
+    where: {
+      offerorID: offerorID
+    }
+  });
+
+  await Trade.destroy({
+    where: {
+      [Op.or]:[
+        {offerorID: offereeID},
+        {[Op.and]:[
+          {offereeID: offereeID},
+          {status: null},
+        ]},
+        {offereeID: offerorID},
+      ]
+    }
+  });
+
+  const status = await Trade.findAll({
+    where: {
+      offerorID: offerorID,
+    },
+  });
+
+  res.json(status);
+});
+
+//Route to finalize pending trade by offeror
+app.post('/offeror-approve', async (req, res) => {
+  const { offerorID, offereeID, itemID, offerorItemID } = req.body;
+
+  await Trade.update({ offerorAccepted: true }, {
+    where: {
+      offerorID: offerorID
+    }
+  });
+
+  const tradeFinal = await Trade.findAll({
+    attributes: ['offereeAccepted'],
+    where: {
+      offerorID: offerorID,
+    }
+  });
+
+  if(tradeFinal[0].offereeAccepted) {
+    console.log("Trade Completed");
+    
+    await Item.update({ userAccount: offereeID }, {
+      where: {
+        id: offerorItemID
+      }
+    });
+    await Item.update({ userAccount: offerorID }, {
+      where: {
+        id: itemID
+      }
+    });
+    await Trade.update({ status: "completed" }, {
+      where: {
+        offerorID: offerorID
+      }
+    });
+    res.json({"status":"Items Swapped"});
+  } else {
+    res.json({"status":"trade still waiting for offeree"});
+  }
+  
+});
+
+//Route to finalize pending trade by offeror
+app.post('/offeree-approve', async (req, res) => {
+  const { offerorID, offereeID, itemID, offerorItemID } = req.body;
+
+  await Trade.update({ offereeAccepted: true }, {
+    where: {
+      offerorID: offerorID
+    }
+  });
+
+  const tradeFinal = await Trade.findAll({
+    attributes: ['offerorAccepted'],
+    where: {
+      offerorID: offerorID,
+    }
+  });
+
+  if(tradeFinal[0].offerorAccepted) {
+    console.log("Trade Completed");
+    
+    await Item.update({ userAccount: offereeID }, {
+      where: {
+        id: offerorItemID
+      }
+    });
+    await Item.update({ userAccount: offerorID }, {
+      where: {
+        id: itemID
+      }
+    });
+    await Trade.update({ status: "completed" }, {
+      where: {
+        offerorID: offerorID
+      }
+    });
+    res.json({"status":"Items Swapped"});
+  } else {
+    res.json({"status":"trade still waiting for offeror"});
+  }
+  
+});
+
+//Route to finalize pending trade by offeree
+app.post('/offeree-approve', async (req, res) => {
+  
 });
 
 //routes for fetching offers

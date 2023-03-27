@@ -17,7 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     offerorID: DataTypes.STRING,
     offereeID: DataTypes.STRING,
     status: DataTypes.STRING,
-    itemID: DataTypes.INTEGER
+    itemID: DataTypes.INTEGER,
+    offerorAccepted: DataTypes.BOOLEAN,
+    offereeAccepted: DataTypes.BOOLEAN,
+    offerorItemID: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Trade',
