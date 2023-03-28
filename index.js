@@ -3,7 +3,7 @@ const session = require('express-session');
 const path = require('path');
 const app = express();
 const Sequelize = require('sequelize');
-const { User, Item, Trade } = require('./models');
+const { User, Item, Trade, CompletedTrade } = require('./models');
 const { Op } = require('sequelize');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
@@ -331,11 +331,20 @@ app.post('/offeror-approve', async (req, res) => {
         id: itemID
       }
     });
-    await Trade.update({ status: "completed" }, {
+    
+    await CompletedTrade.create({
+      offerorID, 
+      offereeID, 
+      itemID, 
+      offerorItemID,
+    });
+    
+    await Trade.destroy({
       where: {
         offerorID: offerorID
       }
     });
+
     res.json({"status":"Items Swapped"});
   } else {
     res.json({"status":"trade still waiting for offeree"});
@@ -385,19 +394,42 @@ app.post('/offeree-approve', async (req, res) => {
   
 });
 
-//routes for fetching offers
-app.get('/fetchoffers/:id', async (req, res) => {
-  const { id } = req.params;
+//Route to cancel pending trade
+app.post('/cancel-trade', async (req, res) => {
+  const { tradeID } = req.params;
+  await Trade.destroy({
+    where: {
+      id: tradeID,
+      status: pending
+    },
+  });
+  res.json({"status": "trade cancelled"});
+});
+
+//routes for fetching offers made
+app.post('/fetchoffersmade', async (req, res) => {
+  const { offerorID } = req.body;
   const offers = await Trade.findAll({
     where: {
-      offereeID: id,
+      offerorID: offerorID,
     },
   });
   res.json(offers);
 });
 
-app.get('/offerinfo/:offerorID/:itemID', async (req, res) => {
-  const { offerorID, itemID } = req.params;
+//routes for fetching offers made
+app.post('/fetchoffersrecd/', async (req, res) => {
+  const { offereeID } = req.body;
+  const offers = await Trade.findAll({
+    where: {
+      offereeID: offereeID,
+    },
+  });
+  res.json(offers);
+});
+
+app.post('/offerinfo', async (req, res) => {
+  const { itemID, offerorID } = req.body;
 
   const itemInfo = await Item.findAll({
     where: {
@@ -406,7 +438,7 @@ app.get('/offerinfo/:offerorID/:itemID', async (req, res) => {
   });
   const offerorInfo = await User.findAll({
     where: {
-      id: offerorID,
+      email: offerorID,
     },
     attributes: ['id', 'firstName'],
   });
