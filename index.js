@@ -412,6 +412,7 @@ app.post('/fetchoffersmade', async (req, res) => {
   const offers = await Trade.findAll({
     where: {
       offerorID: offerorID,
+      status: null
     },
   });
   res.json(offers);
@@ -423,6 +424,7 @@ app.post('/fetchoffersrecd/', async (req, res) => {
   const offers = await Trade.findAll({
     where: {
       offereeID: offereeID,
+      status: null
     },
   });
   res.json(offers);
