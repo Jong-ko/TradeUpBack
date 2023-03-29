@@ -190,6 +190,26 @@ app.get('/logout', async (req, res) => {
   });
 });
 
+//route to check if user has a pending trade
+app.get('/check-pending', async (req, res) => {
+  const pendingCount = await Trade.count({
+   where:{
+     [Op.and]:[
+       {status: 'pending'},
+       {[Op.or]:[
+         {offerorID: req.session.user},
+         {offereeID: req.session.user},
+       ]},
+     ]
+   }
+  });
+  if(pendingCount > 0) {
+   res.send(true);
+  }else {
+   res.send(false);
+  }
+ });
+
 //routes for Item Browsing
 //All Item Fetch
 app.get('/fetchAllItems', async (req, res) => {
