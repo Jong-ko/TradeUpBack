@@ -397,16 +397,26 @@ app.post('/offeree-approve', async (req, res) => {
         id: offerorItemID
       }
     });
+    
     await Item.update({ userAccount: offerorID }, {
       where: {
         id: itemID
       }
     });
-    await Trade.update({ status: "completed" }, {
+    
+    await CompletedTrade.create({
+      offerorID, 
+      offereeID, 
+      itemID, 
+      offerorItemID,
+    });
+    
+    await Trade.destroy({
       where: {
         offerorID: offerorID
       }
     });
+
     res.json({"status":"Items Swapped"});
   } else {
     res.json({"status":"trade still waiting for offeror"});
