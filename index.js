@@ -117,6 +117,16 @@ app.delete('/delete-item/:id', async (req, res) => {
       id,
     },
   });
+  await Trade.destroy({
+    where: {
+      offerorID: req.session.user,
+    },
+  });
+  await Trade.destroy({
+    where: {
+      offereeID: req.session.user,
+    },
+  });
   res.json(removeItem);
 });
 
@@ -426,11 +436,12 @@ app.post('/offeree-approve', async (req, res) => {
 
 //Route to cancel pending trade
 app.post('/cancel-trade', async (req, res) => {
-  const { tradeID } = req.params;
+  const { tradeID } = req.body;
+  
   await Trade.destroy({
     where: {
       id: tradeID,
-      status: pending
+      status: 'pending'
     },
   });
   res.json({"status": "trade cancelled"});
